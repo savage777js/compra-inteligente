@@ -9,6 +9,12 @@ function App() {
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [error, setError] = useState(null);
 
+  const getWords = (text) => text.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 2);
+  const getSimilarity = (words1, words2) => {
+    const intersection = words1.filter(x => words2.includes(x));
+    return intersection.length / Math.min(words1.length, words2.length);
+  };
+
   const handleSearch = async () => {
     if (!query.trim()) return;
     setLoading(true);
@@ -20,10 +26,32 @@ function App() {
       if (window.electronAPI) {
         const response = await window.electronAPI.searchProducts(query);
         if (response.success) {
-          setResults(response.data);
+          
+          let processedResults = [...response.data];
+          
+          // Detectar modelos similares más baratos en otras tiendas
+          for (let i = 0; i < processedResults.length; i++) {
+            const p1 = processedResults[i];
+            const words1 = getWords(p1.title);
+            
+            for (let j = 0; j < processedResults.length; j++) {
+              if (i === j) continue;
+              const p2 = processedResults[j];
+              const words2 = getWords(p2.title);
+              
+              // Si comparten más del 65% de las palabras clave, son de distinta tienda y el otro es más barato
+              if (getSimilarity(words1, words2) > 0.65 && p1.store !== p2.store && p2.price < p1.price) {
+                if (!p1.cheaperAlternative || p2.price < p1.cheaperAlternative.price) {
+                  p1.cheaperAlternative = p2;
+                }
+              }
+            }
+          }
+          
+          setResults(processedResults);
           
           setAnalyzing(true);
-          const aiResponse = await window.electronAPI.analyzeProducts(query, response.data);
+          const aiResponse = await window.electronAPI.analyzeProducts(query, processedResults);
           
           if (aiResponse.success) {
             setAiAnalysis(aiResponse.data);
@@ -122,6 +150,13 @@ function App() {
                       <div className="product-info">
                         <h4 className="product-title" title={product.title}>{product.title}</h4>
                         <p className="product-price">{formatPrice(product.price)}</p>
+                        
+                        {product.cheaperAlternative && (
+                          <div className="cheaper-alert">
+                            🔥 ¡Mismo modelo en <strong>{product.cheaperAlternative.store}</strong> por {formatPrice(product.cheaperAlternative.price)}!
+                          </div>
+                        )}
+                        
                         <div className="product-footer">
                           <span className="store-badge">{product.store}</span>
                           <a href={product.url} target="_blank" rel="noreferrer" className="view-link">
