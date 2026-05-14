@@ -1,0 +1,5 @@
+node_modules/
+dist/
+dist-electron/
+scratch/
+.DS_Store
