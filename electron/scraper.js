@@ -1,17 +1,18 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const { BrowserWindow } = require('electron');
 
 async function searchProducts(query) {
   console.log(`Starting multi-store research for: ${query}`);
   
   try {
-    const [mlResults, sodimacResults, easyResults] = await Promise.all([
+    const [mlResults, sodimacResults, falabellaResults] = await Promise.all([
       scrapeMercadoLibre(query),
       scrapeSodimac(query),
-      scrapeEasy(query)
+      scrapeFalabella(query)
     ]);
     
-    let allResults = [...mlResults, ...sodimacResults, ...easyResults];
+    let allResults = [...mlResults, ...sodimacResults, ...falabellaResults];
     
     allResults.sort((a, b) => a.price - b.price);
     
@@ -101,12 +102,67 @@ async function scrapeSodimac(query) {
   }
 }
 
-async function scrapeEasy(query) {
-  try {
-    return [];
-  } catch (error) {
-    return [];
-  }
+async function scrapeFalabella(query) {
+  return new Promise((resolve) => {
+    const url = `https://www.falabella.com/falabella-cl/search?Ntt=${encodeURIComponent(query)}`;
+    
+    const win = new BrowserWindow({
+      show: false,
+      webPreferences: {
+        offscreen: true,
+        nodeIntegration: false,
+        contextIsolation: true
+      }
+    });
+
+    win.webContents.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+    win.loadURL(url);
+
+    win.webContents.on('did-finish-load', async () => {
+      try {
+        const results = await win.webContents.executeJavaScript(`
+          new Promise(resolve => {
+            setTimeout(() => {
+              try {
+                const items = [];
+                const links = Array.from(document.querySelectorAll('a')).filter(a => a.href && a.href.includes('/product/'));
+                links.slice(0, 5).forEach((a, i) => {
+                  const container = a.parentElement.parentElement;
+                  if(!container) return;
+                  const text = container.innerText;
+                  const priceMatch = text.match(/\\$[\\s]*([\\d\\.]+)/);
+                  const price = priceMatch ? parseInt(priceMatch[1].replace(/[^0-9]/g, '')) : 0;
+                  const img = container.querySelector('img');
+                  const image = img ? img.src : '';
+                  const title = a.innerText.split('\\n')[0];
+                  
+                  if(title && price > 0) {
+                     items.push({ id: 'falabella-'+Date.now()+i, title, price, url: a.href, image, store: 'Falabella' });
+                  }
+                });
+                resolve(items);
+              } catch(e) {
+                resolve([]);
+              }
+            }, 3000); // Esperar a que React renderice
+          });
+        `);
+        win.destroy();
+        resolve(results || []);
+      } catch (err) {
+        if (!win.isDestroyed()) win.destroy();
+        resolve([]);
+      }
+    });
+
+    setTimeout(() => {
+      if (!win.isDestroyed()) {
+        win.destroy();
+        resolve([]);
+      }
+    }, 15000);
+  });
 }
 
 module.exports = {
