@@ -184,7 +184,7 @@ function App() {
                         )}
                         
                         <div className="product-footer">
-                          <span className="store-badge">{product.store}</span>
+                          {product.store && <span className="store-badge">{product.store}</span>}
                           <a href={product.url} target="_blank" rel="noreferrer" className="view-link">
                             Ver <ExternalLink size={14} />
                           </a>

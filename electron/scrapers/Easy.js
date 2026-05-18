@@ -4,7 +4,7 @@ class EasyScraper extends BaseScraper {
   constructor() {
     super('Easy', 'https://www.easy.cl', {
       cardSelector: '.product-card, [class*="product-card"], [class*="galleryItem"]',
-      titleSelector: '[class*="productBrand"], .product-title, .title, h3, b',
+      titleSelector: '[class*="productBrand"], [class*="product-title"], .title, h3',
       priceSelector: '[class*="currencyContainer"], .price, .current-price',
       linkSelector: 'a',
       imageSelector: 'img'
@@ -32,7 +32,7 @@ class EasyScraper extends BaseScraper {
           cards.forEach((card, i) => {
             if (items.length >= 6) return;
             try {
-              const titleEl = card.querySelector('[class*="productBrand"], .product-title, .title, h3, b');
+              const titleEl = card.querySelector('[class*="productBrand"], [class*="product-title"], .title, h3');
               const priceEl = card.querySelector('[class*="currencyContainer"], .price, .current-price');
               const linkEl = card.querySelector('a');
               if (titleEl && priceEl && linkEl) {

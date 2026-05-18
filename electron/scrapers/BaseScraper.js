@@ -138,7 +138,8 @@ class BaseScraper {
   }
 
   /**
-   * Cloud Fallback Mode - Executes the search synchronously using Apify Playwright Scraper and default free proxies
+   * Cloud Fallback Mode - Executes the search synchronously using Apify Playwright Scraper
+   * Optimized with waitUntil: 'domcontentloaded' and timeout reductions to execute fast and prevent timeouts!
    */
   async scrapeWithApify(url, token) {
     try {
@@ -152,7 +153,7 @@ class BaseScraper {
           log.info('Scraping page: ' + request.url);
           
           // Wait for dynamic React/Next.js hydration
-          await page.waitForTimeout(6000);
+          await page.waitForTimeout(4000);
           
           // Evaluate selectors in browser context
           const items = await page.evaluate((s) => {
@@ -225,6 +226,8 @@ class BaseScraper {
             imageSelector: this.config.imageSelector
           },
           maxPagesPerCrawl: 1,
+          waitUntil: 'domcontentloaded',
+          navigationTimeoutSecs: 30,
           proxyConfiguration: {
             useApifyProxy: true
           }

@@ -4,7 +4,7 @@ class ParisScraper extends BaseScraper {
   constructor() {
     super('Paris', 'https://www.paris.cl', {
       cardSelector: '.product-item, .item-product, [class*="product-card"]',
-      titleSelector: '.pdp-link, .item-name, h3, h4, b',
+      titleSelector: '.pdp-link, .item-name, h3, h4',
       priceSelector: '.item-price, .price, .price-main',
       linkSelector: 'a',
       imageSelector: 'img'
@@ -32,7 +32,7 @@ class ParisScraper extends BaseScraper {
           cards.forEach((card, i) => {
             if (items.length >= 6) return;
             try {
-              const titleEl = card.querySelector('.pdp-link, .item-name, h3, h4, b');
+              const titleEl = card.querySelector('.pdp-link, .item-name, h3, h4');
               const priceEl = card.querySelector('.item-price, .price, .price-main');
               const linkEl = card.querySelector('a');
               if (titleEl && priceEl && linkEl) {

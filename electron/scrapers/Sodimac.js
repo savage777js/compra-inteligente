@@ -4,7 +4,7 @@ class SodimacScraper extends BaseScraper {
   constructor() {
     super('Sodimac', 'https://www.sodimac.cl', {
       cardSelector: 'a.pod-link, [id^="testId-pod-"], .product-container, [class*="product-card"]',
-      titleSelector: '[id*="display-name"], .product-title, .title, h3, b',
+      titleSelector: '[id*="display-name"], [class*="product-title"], [class*="pod-title"], .title, h3',
       priceSelector: '[class*="price"], .current-price, .discount-price, .price',
       linkSelector: 'a',
       imageSelector: 'img'
@@ -32,7 +32,7 @@ class SodimacScraper extends BaseScraper {
           cards.forEach((card, i) => {
             if (items.length >= 6) return;
             try {
-              const titleEl = card.querySelector('[id*="display-name"], .product-title, .title, h3, b');
+              const titleEl = card.querySelector('[id*="display-name"], [class*="product-title"], [class*="pod-title"], .title, h3');
               const priceEl = card.querySelector('[class*="price"], .current-price, .discount-price, .price');
               const link = card.href || (card.querySelector('a') ? card.querySelector('a').href : '');
               const imgEl = card.querySelector('img');

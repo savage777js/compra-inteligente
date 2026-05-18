@@ -4,7 +4,7 @@ class RipleyScraper extends BaseScraper {
   constructor() {
     super('Ripley', 'https://simple.ripley.cl', {
       cardSelector: '.catalog-product, .product-item, [class*="catalog-product"]',
-      titleSelector: '.catalog-product-details__name, h3, h4, b',
+      titleSelector: '.catalog-product-details__name, h3, h4',
       priceSelector: '.catalog-prices__offer-price, .catalog-prices__card-price, .price',
       linkSelector: 'a',
       imageSelector: 'img'
@@ -32,7 +32,7 @@ class RipleyScraper extends BaseScraper {
           cards.forEach((card, i) => {
             if (items.length >= 6) return;
             try {
-              const titleEl = card.querySelector('.catalog-product-details__name, h3, h4, b');
+              const titleEl = card.querySelector('.catalog-product-details__name, h3, h4');
               const priceEl = card.querySelector('.catalog-prices__offer-price, .catalog-prices__card-price, .price');
               const linkEl = card.querySelector('a');
               if (titleEl && priceEl && linkEl) {

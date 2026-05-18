@@ -4,7 +4,7 @@ class FalabellaScraper extends BaseScraper {
   constructor() {
     super('Falabella', 'https://www.falabella.com', {
       cardSelector: 'a.pod-link, [id^="testId-pod-"], .product-card, [class*="product-card"]',
-      titleSelector: '[id*="display-name"], .pod-display-name, .title, h3, b',
+      titleSelector: '[id*="display-name"], .pod-display-name, [class*="pod-title"], [class*="product-title"], .title, h3',
       priceSelector: '[class*="price"], .copy10, .price-0, .current-price, .price',
       linkSelector: 'a',
       imageSelector: 'img'
@@ -32,7 +32,7 @@ class FalabellaScraper extends BaseScraper {
           cards.forEach((card, i) => {
             if (items.length >= 6) return;
             try {
-              const titleEl = card.querySelector('[id*="display-name"], .pod-display-name, .title, h3, b');
+              const titleEl = card.querySelector('[id*="display-name"], .pod-display-name, [class*="pod-title"], [class*="product-title"], .title, h3');
               const priceEl = card.querySelector('[class*="price"], .copy10, .price-0, .current-price, .price');
               const link = card.href || (card.querySelector('a') ? card.querySelector('a').href : '');
               const imgEl = card.querySelector('img');
