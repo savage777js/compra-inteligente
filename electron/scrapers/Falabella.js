@@ -3,9 +3,9 @@ const BaseScraper = require('./BaseScraper');
 class FalabellaScraper extends BaseScraper {
   constructor() {
     super('Falabella', 'https://www.falabella.com', {
-      cardSelector: 'a.pod-link, [id^="testId-pod-"], .product-card, [class*="product-card"]',
-      titleSelector: '[id*="display-name"], .pod-display-name, [class*="pod-title"], [class*="product-title"], .title, h3',
-      priceSelector: '[class*="price"], .copy10, .price-0, .current-price, .price',
+      cardSelector: 'a.pod-link, [id^="testId-pod-"], .product-card, [class*="product-card"], a.pod',
+      titleSelector: '.pod-subTitle, [class*="pod-subTitle"], [id*="display-name"], .pod-display-name',
+      priceSelector: '[class*="price-0"], [class*="price-1"], [class*="price"], .copy10, .price-0, .current-price, .price',
       linkSelector: 'a',
       imageSelector: 'img'
     });
@@ -28,12 +28,12 @@ class FalabellaScraper extends BaseScraper {
       const script = `
         (() => {
           const items = [];
-          const cards = document.querySelectorAll('a.pod-link, [id^="testId-pod-"], .product-card, [class*="product-card"]');
+          const cards = document.querySelectorAll('a.pod-link, [id^="testId-pod-"], .product-card, [class*="product-card"], a.pod');
           cards.forEach((card, i) => {
             if (items.length >= 6) return;
             try {
-              const titleEl = card.querySelector('[id*="display-name"], .pod-display-name, [class*="pod-title"], [class*="product-title"], .title, h3');
-              const priceEl = card.querySelector('[class*="price"], .copy10, .price-0, .current-price, .price');
+              const titleEl = card.querySelector('.pod-subTitle, [class*="pod-subTitle"], [id*="display-name"], .pod-display-name');
+              const priceEl = card.querySelector('[class*="price-0"], [class*="price-1"], [class*="price"], .copy10, .price-0, .current-price, .price');
               const link = card.href || (card.querySelector('a') ? card.querySelector('a').href : '');
               const imgEl = card.querySelector('img');
               if (titleEl && priceEl && link) {
