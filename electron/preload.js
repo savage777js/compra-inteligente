@@ -5,5 +5,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPriceHistory: (productId) => ipcRenderer.invoke('get-price-history', productId),
   analyzeProducts: (query, products) => ipcRenderer.invoke('analyze-products', query, products),
   getSetting: (key) => ipcRenderer.invoke('get-setting', key),
-  saveSetting: (key, value) => ipcRenderer.invoke('save-setting', key, value)
+  saveSetting: (key, value) => ipcRenderer.invoke('save-setting', key, value),
+  toggleFavorite: (productId, alertThreshold) => ipcRenderer.invoke('toggle-favorite', productId, alertThreshold),
+  getFavorites: () => ipcRenderer.invoke('get-favorites')
 });

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, Bot, TrendingUp, Loader2, ExternalLink } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Bot, TrendingUp, Loader2, ExternalLink, Settings, X } from 'lucide-react';
 
 function App() {
   const [query, setQuery] = useState('');
@@ -8,6 +8,29 @@ function App() {
   const [results, setResults] = useState([]);
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [error, setError] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [apifyToken, setApifyToken] = useState('');
+  const [cloudProvider, setCloudProvider] = useState('scraperapi');
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      if (window.electronAPI) {
+        try {
+          const key = await window.electronAPI.getSetting('scraperapi_key');
+          if (key) setApiKey(key);
+          const token = await window.electronAPI.getSetting('apify_token');
+          if (token) setApifyToken(token);
+          const provider = await window.electronAPI.getSetting('cloud_provider');
+          if (provider) setCloudProvider(provider);
+        } catch (e) {
+          console.error('Failed to load settings:', e);
+        }
+      }
+    };
+    loadSettings();
+  }, []);
 
   const getWords = (text) => text.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 2);
   const getSimilarity = (words1, words2) => {
@@ -82,6 +105,9 @@ function App() {
 
       <div className="content-overlay">
         <header className="header">
+          <button className="settings-btn" onClick={() => setShowSettings(true)} title="Configuración de Scraping">
+            <Settings size={20} />
+          </button>
           <h1>Compra Inteligente</h1>
           <p>Tu Asesor IA de Compras Multi-Categoría</p>
         </header>
@@ -173,6 +199,103 @@ function App() {
         </div>
         </main>
       </div>
+
+      {showSettings && (
+        <div className="modal-overlay" onClick={() => setShowSettings(false)}>
+          <div className="modal-content glass-panel" onClick={(e) => e.stopPropagation()}>
+            <button className="close-btn" onClick={() => setShowSettings(false)}>
+              <X size={20} />
+            </button>
+            <h3>Configuración del Sistema</h3>
+            
+            <div className="form-group" style={{ marginTop: '1rem', marginBottom: '1rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontWeight: '500' }}>
+                Proveedor de Scraping Cloud
+              </label>
+              <select
+                value={cloudProvider}
+                onChange={(e) => setCloudProvider(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.8rem 1rem',
+                  borderRadius: '8px',
+                  border: '1px solid var(--glass-border)',
+                  background: 'rgba(15, 23, 42, 0.8)',
+                  color: 'white',
+                  fontSize: '1rem',
+                  outline: 'none'
+                }}
+              >
+                <option value="scraperapi">ScraperAPI (Bypass Directo con Proxies Residenciales)</option>
+                <option value="apify">Apify (Tareas Serverless en la Nube)</option>
+              </select>
+            </div>
+
+            {cloudProvider === 'scraperapi' ? (
+              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontWeight: '500' }}>
+                  Clave API de ScraperAPI
+                </label>
+                <input 
+                  type="password" 
+                  placeholder="Inserta tu API Key de scraperapi.com..."
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.8rem 1rem',
+                    borderRadius: '8px',
+                    border: '1px solid var(--glass-border)',
+                    background: 'rgba(15, 23, 42, 0.8)',
+                    color: 'white',
+                    fontSize: '1rem'
+                  }}
+                />
+                <p className="help-text" style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                  Usa proxies residenciales de Chile y renderizado de JS de forma transparente. Obtén una clave gratis con 5,000 créditos en <a href="https://www.scraperapi.com" target="_blank" rel="noreferrer" style={{color: '#60a5fa'}}>scraperapi.com</a>.
+                </p>
+              </div>
+            ) : (
+              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontWeight: '500' }}>
+                  Token de Consola Apify
+                </label>
+                <input 
+                  type="password" 
+                  placeholder="Inserta tu API Token de apify.com..."
+                  value={apifyToken}
+                  onChange={(e) => setApifyToken(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.8rem 1rem',
+                    borderRadius: '8px',
+                    border: '1px solid var(--glass-border)',
+                    background: 'rgba(15, 23, 42, 0.8)',
+                    color: 'white',
+                    fontSize: '1rem'
+                  }}
+                />
+                <p className="help-text" style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                  Ejecuta tareas de rastreo asíncronas en servidores en la nube de Apify. Obtén tu token gratis en la pestaña de Integraciones en <a href="https://console.apify.com" target="_blank" rel="noreferrer" style={{color: '#60a5fa'}}>console.apify.com</a>.
+                </p>
+              </div>
+            )}
+
+            <button className="primary-btn full-width" onClick={async () => {
+              if (window.electronAPI) {
+                await window.electronAPI.saveSetting('scraperapi_key', apiKey);
+                await window.electronAPI.saveSetting('apify_token', apifyToken);
+                await window.electronAPI.saveSetting('cloud_provider', cloudProvider);
+                setSaveSuccess(true);
+                setTimeout(() => setSaveSuccess(false), 3000);
+              }
+            }}>
+              Guardar Configuración
+            </button>
+            {saveSuccess && <p className="success-text" style={{ marginTop: '1rem', color: '#4ade80', fontSize: '0.9rem', textAlign: 'center' }}>¡Configuración guardada con éxito!</p>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

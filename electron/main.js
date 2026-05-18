@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
-const { searchProducts } = require('./scraper');
-const { saveProduct, getPriceHistory, getSetting, saveSetting } = require('./database');
+const { searchProducts } = require('./scraperEngine');
+const { saveProduct, getPriceHistory, getSetting, saveSetting, toggleFavorite, getFavorites } = require('./database');
 const { analyzeProducts } = require('./ai');
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -16,6 +16,12 @@ function createWindow() {
     },
     titleBarStyle: 'hiddenInset', // Looks modern on Mac
     autoHideMenuBar: true, // Modern on Windows
+  });
+
+  // Intercept target="_blank" links and open in default system browser (Chrome/Safari)
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    require('electron').shell.openExternal(url);
+    return { action: 'deny' };
   });
 
   if (isDev) {
@@ -69,6 +75,25 @@ app.whenReady().then(() => {
     try {
       const analysis = await analyzeProducts(query, products);
       return { success: true, data: analysis };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  // --- ACADEMIC / ENTERPRISE FAVORITES IPC EXPOSURE ---
+  ipcMain.handle('toggle-favorite', async (event, productId, alertThreshold) => {
+    try {
+      const result = await toggleFavorite(productId, alertThreshold);
+      return { success: true, data: result };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('get-favorites', async (event) => {
+    try {
+      const favorites = await getFavorites();
+      return { success: true, data: favorites };
     } catch (error) {
       return { success: false, error: error.message };
     }
